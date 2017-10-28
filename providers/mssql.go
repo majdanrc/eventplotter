@@ -13,7 +13,7 @@ import (
 type MssqlProvider struct {
 }
 
-func ProvideVertical(conf dbconfig.Config, query string) ([]interface{}, error) {
+func ProvideVertical(conf dbconfig.Config, dateValues []string, query string) ([]interface{}, error) {
 	var res []interface{}
 
 	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s", conf.Server, conf.Login, conf.Password, conf.Database)
@@ -33,7 +33,7 @@ func ProvideVertical(conf dbconfig.Config, query string) ([]interface{}, error) 
 	suppType, _ := exec(db, query, params)
 
 	for _, v := range suppType {
-		ev := events.VerticalEvent{On: time.Now().UTC(), Values: v}
+		ev := events.VerticalEvent{On: time.Now().UTC(), Values: v, DateValues: dateValues}
 
 		res = append(res, ev)
 	}

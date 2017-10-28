@@ -21,7 +21,7 @@ func main() {
 	var (
 		configPath  = flag.String("c", "e:\\plotterconf.json", "config file")
 		env         = flag.String("e", "dev", "env")
-		streamsFile = flag.String("s", "", "streams file")
+		streamsFile = flag.String("s", "e:\\", "streams file")
 	)
 	flag.Parse()
 	_ = streamsFile
@@ -59,7 +59,9 @@ func main() {
 	invoicesQuery := "select * from Invoice with(NOLOCK) where idSupplier=@SupplierId order by dateCreation asc"
 	suppTypesQuery := "select * from SUPPLIERTYPE with(NOLOCK) where idSupplier=@SupplierId order by ACTIONDATE asc"
 
-	subs, _ := providers.ProvideVertical(conf, strings.Replace(subsQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
+	subsDateValues := []string{"subscriptionDate", "subscriptionEndDate"}
+
+	subs, _ := providers.ProvideVertical(conf, subsDateValues, strings.Replace(subsQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
 	invoices, _ := providers.ProvideProgressing(conf, strings.Replace(invoicesQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
 	suppTypes, _ := providers.ProvideBasic(conf, strings.Replace(suppTypesQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
 

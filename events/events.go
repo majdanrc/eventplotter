@@ -28,18 +28,18 @@ func (e BasicEvent) Description() []string {
 }
 
 type VerticalEvent struct {
-	On     time.Time
-	Values map[string]string
+	On         time.Time
+	Values     map[string]string
+	DateValues []string
+	InfoValues []string
 }
 
 func (e VerticalEvent) KeyEvents() []time.Time {
 	var res []time.Time
 
-	begin := convertToDate(e.Values["subscriptionDate"])
-	end := convertToDate(e.Values["subscriptionEndDate"])
-
-	res = append(res, begin)
-	res = append(res, end)
+	for _, k := range e.DateValues {
+		res = append(res, convertToDate(e.Values[k]))
+	}
 
 	return res
 }
