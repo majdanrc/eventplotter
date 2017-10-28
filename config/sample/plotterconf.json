@@ -1,0 +1,18 @@
+{
+	"config": [
+		{
+			"env": "dev",
+			"login": "login",
+			"password": "pwd",
+			"server": "server",
+			"database": "db"
+		},
+		{
+			"env": "prod",
+			"login": "login",
+			"password": "pwd",
+			"server": "server",
+			"database": "db"
+		}
+	]
+}
