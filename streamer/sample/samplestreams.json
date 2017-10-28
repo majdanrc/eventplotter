@@ -1,4 +1,8 @@
 {
+	"parameters": {
+		"userName": "radzio",
+		"position": "scavenger"
+	},
     "streams": [
         {
             "type": 1,

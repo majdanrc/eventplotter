@@ -6,25 +6,27 @@ import (
 	"log"
 	"strings"
 
-	"github.com/majdanrc/eventplotter/events"
-
 	_ "github.com/denisenkom/go-mssqldb"
 
 	"github.com/araddon/dateparse"
 
 	"github.com/majdanrc/eventplotter/config"
+	"github.com/majdanrc/eventplotter/events"
 	"github.com/majdanrc/eventplotter/plotter"
 	"github.com/majdanrc/eventplotter/providers"
+	"github.com/majdanrc/eventplotter/streamer"
 )
 
 func main() {
 	var (
 		configPath  = flag.String("c", "e:\\plotterconf.json", "config file")
 		env         = flag.String("e", "dev", "env")
-		streamsFile = flag.String("s", "e:\\", "streams file")
+		streamsFile = flag.String("s", "e:\\samplestreams.json", "streams file")
 	)
 	flag.Parse()
-	_ = streamsFile
+
+	streamSource, _ := streamer.ReadStreamConfig(*streamsFile)
+	fmt.Println(streamSource)
 
 	conf, err := dbconfig.Read(*env, *configPath)
 	if err != nil {

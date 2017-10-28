@@ -83,7 +83,7 @@ func (p *Plotter) plotProgressing(img *image.RGBA, items []time.Time, info []str
 		color.RGBA{0, 255, 0, 255},
 		color.RGBA{240, 240, 20, 255}}
 
-	fmt.Println(p.start)
+	//fmt.Println(p.start)
 
 	if p.start.IsZero() {
 		p.start = items[0]
@@ -106,7 +106,7 @@ func (p *Plotter) plotProgressing(img *image.RGBA, items []time.Time, info []str
 func (p *Plotter) plotBasic(img *image.RGBA, items []time.Time, info []string) {
 	colors := []color.Color{color.RGBA{128, 128, 255, 255}, color.RGBA{0, 255, 0, 255}}
 
-	fmt.Println(p.start)
+	//fmt.Println(p.start)
 
 	if p.start.IsZero() {
 		p.start = items[0]

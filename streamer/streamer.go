@@ -7,7 +7,8 @@ import (
 )
 
 type StreamSource struct {
-	Streams []struct {
+	Parameters map[string]string `json:"parameters"`
+	Streams    []struct {
 		Type       int      `json:"type"`
 		Provider   string   `json:"provider"`
 		Query      string   `json:"query"`
