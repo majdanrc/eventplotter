@@ -56,16 +56,21 @@ func main() {
 
 	streamSource.Parameters["@SupplierId"] = typedUsers[0].Values["idSupplier"]
 
-	provider := new(providers.MsSqlProvider)
-	provider.Config = conf
+	msSqlProvider := new(providers.MsSqlProvider)
+	msSqlProvider.Config = conf
+
+	providers := make(map[string]providers.EventProvider)
+	providers["mssql"] = msSqlProvider
 
 	var allEvents []events.Event
 
 	for _, item := range streamSource.Streams {
 		item.Query = strings.Replace(item.Query, "@SupplierId", streamSource.Parameters["@SupplierId"], -1)
 
-		providedEvents, _ := provider.ProvideEvents(item)
-		allEvents = append(allEvents, providedEvents...)
+		if providers[item.Provider] != nil {
+			providedEvents, _ := providers[item.Provider].ProvideEvents(item)
+			allEvents = append(allEvents, providedEvents...)
+		}
 	}
 
 	fmt.Println(len(allEvents))
