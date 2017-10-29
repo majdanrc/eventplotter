@@ -19,7 +19,7 @@ type Plotter struct {
 	start time.Time
 }
 
-func (p *Plotter) Plot(events []interface{}, examinedDate time.Time, desc string) {
+func (p *Plotter) Plot(events []events.Event, examinedDate time.Time, desc string) {
 	var img = image.NewRGBA(image.Rect(0, 0, 800, 3000))
 	addLabel(img, 500, 20, fmt.Sprintf("id: %s", desc))
 
@@ -34,7 +34,7 @@ func (p *Plotter) Plot(events []interface{}, examinedDate time.Time, desc string
 	png.Encode(f, img)
 }
 
-func (p *Plotter) choosePainter(img *image.RGBA, items []interface{}) {
+func (p *Plotter) choosePainter(img *image.RGBA, items []events.Event) {
 	for _, ev := range items {
 		switch ev := ev.(type) {
 		case nil:

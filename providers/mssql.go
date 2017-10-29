@@ -6,17 +6,24 @@ import (
 	"strings"
 	"time"
 
+	// used only for provider
+	_ "github.com/denisenkom/go-mssqldb"
+
 	"github.com/majdanrc/eventplotter/config"
 	"github.com/majdanrc/eventplotter/events"
+	"github.com/majdanrc/eventplotter/streamer"
 )
 
-type MssqlProvider struct {
+type MsSqlProvider struct {
+	Config dbconfig.Config
 }
 
-func ProvideVertical(conf dbconfig.Config, dateValues []string, query string) ([]interface{}, error) {
-	var res []interface{}
+func (p *MsSqlProvider) ProvideEvents(streamer streamer.Stream) ([]events.Event, error) {
+	var res []events.Event
 
-	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s", conf.Server, conf.Login, conf.Password, conf.Database)
+	dsn := fmt.Sprintf(
+		"server=%s;user id=%s;password=%s;database=%s",
+		p.Config.Server, p.Config.Login, p.Config.Password, p.Config.Database)
 
 	db, err := sql.Open("mssql", dsn)
 	if err != nil {
@@ -30,47 +37,37 @@ func ProvideVertical(conf dbconfig.Config, dateValues []string, query string) ([
 
 	params := make(map[string]string)
 
-	suppType, _ := exec(db, query, params)
+	eventValues, _ := exec(db, streamer.Query, params)
 
-	for _, v := range suppType {
-		ev := events.VerticalEvent{On: time.Now().UTC(), Values: v, DateValues: dateValues}
+	for _, v := range eventValues {
 
-		res = append(res, ev)
+		switch streamer.Type {
+		case 2:
+			ev := events.BasicEvent{On: time.Now().UTC(), Values: v}
+			for _, dv := range streamer.DateValues {
+				ev.DateValues = append(ev.DateValues, convertToDate(v[dv]))
+			}
+			res = append(res, ev)
+		case 3:
+			ev := events.VerticalEvent{On: time.Now().UTC(), Values: v}
+			for _, dv := range streamer.DateValues {
+				ev.DateValues = append(ev.DateValues, convertToDate(v[dv]))
+			}
+			res = append(res, ev)
+		case 4:
+			ev := events.ProgressingEvent{On: time.Now().UTC(), Values: v}
+			for _, dv := range streamer.DateValues {
+				ev.DateValues = append(ev.DateValues, convertToDate(v[dv]))
+			}
+			res = append(res, ev)
+		}
 	}
 
 	return res, nil
 }
 
-func ProvideProgressing(conf dbconfig.Config, query string) ([]interface{}, error) {
-	var res []interface{}
-
-	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s", conf.Server, conf.Login, conf.Password, conf.Database)
-
-	db, err := sql.Open("mssql", dsn)
-	if err != nil {
-		return res, fmt.Errorf("cannot connect: %s", err.Error())
-	}
-	err = db.Ping()
-	if err != nil {
-		return res, fmt.Errorf("cannot connect: %s", err.Error())
-	}
-	defer db.Close()
-
-	params := make(map[string]string)
-
-	suppType, _ := exec(db, query, params)
-
-	for _, v := range suppType {
-		ev := events.ProgressingEvent{On: time.Now().UTC(), Values: v}
-
-		res = append(res, ev)
-	}
-
-	return res, nil
-}
-
-func ProvideBasic(conf dbconfig.Config, query string) ([]interface{}, error) {
-	var res []interface{}
+func ProvideBasic(conf dbconfig.Config, query string) ([]events.Event, error) {
+	var res []events.Event
 
 	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s", conf.Server, conf.Login, conf.Password, conf.Database)
 
@@ -164,5 +161,10 @@ func parseValue(pval *interface{}) string {
 		res = fmt.Sprint(v)
 	}
 
+	return res
+}
+
+func convertToDate(date string) time.Time {
+	res, _ := time.Parse("2006-01-02 15:04:05.999", date)
 	return res
 }

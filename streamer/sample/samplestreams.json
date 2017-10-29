@@ -5,14 +5,14 @@
 	},
     "streams": [
         {
-            "type": 1,
+            "type": 2,
             "provider": "csv",
             "query": "g:\\mega.csv",
             "dateValues": ["creationDate"],
             "infoValues": ["userName"]
         },
         {
-            "type": 2,
+            "type": 3,
             "provider": "mssql",
             "query": "select top 2 * from Everything with(nolock)",
             "dateValues": ["creationDate"],

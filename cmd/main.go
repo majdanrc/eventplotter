@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	//_ "github.com/denisenkom/go-mssqldb"
 
 	"github.com/araddon/dateparse"
 
@@ -32,12 +32,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Println(conf.Server)
 
-	userName := "ErnestBarron41688@example.com"
-	errodDate := "10/14/2017 03:06:19 PM"
-	errorDateParsed, err := dateparse.ParseAny(errodDate)
+	userName := streamSource.Parameters["userName"]
+	errorDateParsed, err := dateparse.ParseAny(streamSource.AnalysisDate)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,6 +43,7 @@ func main() {
 
 	user, _ := providers.ProvideBasic(conf, "select idSupplier, idUser from [User] with(NOLOCK) where username='"+userName+"'")
 	var typedUsers []events.BasicEvent
+
 	for _, item := range user {
 		if s, ok := item.(events.BasicEvent); ok {
 			typedUsers = append(typedUsers, s)
@@ -55,27 +54,22 @@ func main() {
 		log.Fatal("user problem")
 	}
 
-	//typedUsers = append(typedUsers, events.BasicEvent{Values: map[string]string{"idSupplier": "1307"}})
+	streamSource.Parameters["@SupplierId"] = typedUsers[0].Values["idSupplier"]
 
-	subsQuery := "select * from Subscription with(NOLOCK) where idSupplier=@SupplierId order by dateCreation asc"
-	invoicesQuery := "select * from Invoice with(NOLOCK) where idSupplier=@SupplierId order by dateCreation asc"
-	suppTypesQuery := "select * from SUPPLIERTYPE with(NOLOCK) where idSupplier=@SupplierId order by ACTIONDATE asc"
+	provider := new(providers.MsSqlProvider)
+	provider.Config = conf
 
-	subsDateValues := []string{"subscriptionDate", "subscriptionEndDate"}
+	var allEvents []events.Event
 
-	subs, _ := providers.ProvideVertical(conf, subsDateValues, strings.Replace(subsQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
-	invoices, _ := providers.ProvideProgressing(conf, strings.Replace(invoicesQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
-	suppTypes, _ := providers.ProvideBasic(conf, strings.Replace(suppTypesQuery, "@SupplierId", typedUsers[0].Values["idSupplier"], -1))
+	for _, item := range streamSource.Streams {
+		item.Query = strings.Replace(item.Query, "@SupplierId", streamSource.Parameters["@SupplierId"], -1)
 
-	var events []interface{}
+		providedEvents, _ := provider.ProvideEvents(item)
+		allEvents = append(allEvents, providedEvents...)
+	}
 
-	events = append(events, subs...)
-	events = append(events, invoices...)
-	events = append(events, suppTypes...)
-
-	//_ = suppTypeEvents
-	fmt.Println(len(events))
+	fmt.Println(len(allEvents))
 
 	plotter := new(plotter.Plotter)
-	plotter.Plot(events, errorDateParsed, typedUsers[0].Values["idSupplier"])
+	plotter.Plot(allEvents, errorDateParsed, typedUsers[0].Values["idSupplier"])
 }
